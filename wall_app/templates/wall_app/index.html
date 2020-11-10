@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <title>Wall</title>
+</head>
+
+<body>        
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <a class="navbar-brand" href="#">CodingDojo Wall</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="my-2 my-lg-0 ml-auto">
+                <span class="mr-4 text-light">Welcome {{user_first_name}}!</span>
+                <a href="{% url 'login:logout'%}">
+                    <button class='btn btn-secondary btn-sm float-right'>
+                        Log Out
+                    </button>
+                </a>
+            </div>
+            
+        </nav>
+        {% if messages %}
+            {% for message in messages %}
+                {% if "logged" in message.tags %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        {{ message }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    <div class="container">
+        <form class="mb-5 mt-2" action="{% url 'wall:message_create' user_email=user_email %}" method='post'>
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="content">Post a message</label>
+                <textarea class="form-control" name="content" id="content" cols="30" rows="5"></textarea>
+            </div>
+            {% if messages %}
+                {% for message in messages %}
+                    {% if "message" in message.tags %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            <button type="submit" class="btn btn-sm btn-primary">Post a message</button>
+        </form>
+        {% if all_messages %}
+            {% for message in all_messages|dictsortreversed:"created_at"  %}
+                <div class="card my-3">
+                    <div class="card-body">
+                        <h5 class="card-title">{{message.written_by.first_name}} {{message.written_by.last_name}} - {{message.created_at|date:"F jS, Y"}}</h5>
+                        <p class="card_text">{{message.content}}</p>                        
+                        {% if user_email == message.written_by.email and message.created_at|date:'jS F Y H:i' >= message_time|date:'jS F Y H:i'%}
+                                <form class=" mt-2" action="{% url 'wall:message_delete' user_email=user_email message_id=message.id %}" method='post'>
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete message</button>
+                                </form>
+                        {% endif %}
+                        
+                    </div>
+
+                    {% if message.comments %}
+                        {% for comment in message.comments.all %}
+                            <div class="mx-5 card my-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{comment.written_by.first_name}} {{comment.written_by.last_name}} - {{comment.created_at|date:"F jS, Y"}}</h5>
+                                    <p class="card_text">{{comment.comment}}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    <form class="px-5 mb-5 mt-2" action="{% url 'wall:comment_create' user_email=user_email message_id=message.id %}" method='post'>
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="comment">Post a comment</label>
+                            <textarea class="form-control" name="comment" id="comment" cols="30" rows="3"></textarea>
+                        </div>
+                        {% if messages %}
+                            {% for message in messages %}
+                                {% if "comment" in message.tags %}
+                                    <div class="alert alert-danger" role="alert">
+                                        {{ message }}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                        <button type="submit" class="btn btn-sm btn-success">Post a comment</button>
+                    </form>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
